@@ -45,7 +45,7 @@ def build_vector_store():
             )
             i += 1
 
-    print(f"✅ Vector store built successfully with {i} FAQs!")
+    print(f"Vector store built successfully with {i} FAQs!")
 
 def get_relevant_context(query, top_k=3):
     client = chromadb.Client(Settings(
