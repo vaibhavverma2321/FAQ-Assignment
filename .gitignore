@@ -1,0 +1,48 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# --- Virtual Environment ---
+venv/
+.env
+.env.local
+.env.*.local
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- Python Build ---
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- Cache / Temp Files ---
+.cache/
+*.tmp
+*.swp
+*.bak
+
+# --- Data and Database Files ---
+data/vectordb/
+*.sqlite3
+*.db
+
+# --- Streamlit & FastAPI ---
+.streamlit/
+
+# --- Notebook checkpoints ---
+.ipynb_checkpoints/
+
+# --- Misc ---
+logs/
