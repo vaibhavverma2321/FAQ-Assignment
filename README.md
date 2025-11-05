@@ -5,6 +5,9 @@ It allows users to ask questions related to clinic timings, billing, policies, a
 The system uses FastAPI as the backend, Streamlit for the UI, and ChromaDB for storing and retrieving relevant FAQ data.
 It integrates with the OpenAI API to generate accurate, context-based responses.
 
+🎬 Demo Video
+https://github.com/vaibhavverma2321/FAQ-Assignment/releases/tag/FAQ-Assignment-Video
+
 🚀 Features
 
 Interactive chatbot interface for clinic FAQs
