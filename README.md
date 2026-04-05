@@ -3,7 +3,7 @@
 This project is a simple FAQ chatbot built for a medical clinic.
 It allows users to ask questions related to clinic timings, billing, policies, and visit preparation.
 The system uses FastAPI as the backend, Streamlit for the UI, and ChromaDB for storing and retrieving relevant FAQ data.
-It integrates with the OpenAI API to generate accurate, context-based responses.
+It integrates with Google Gemini embeddings and chat models to generate accurate, context-based responses.
 
 🎬 Demo Video
 https://github.com/vaibhavverma2321/FAQ-Assignment/releases/tag/FAQ-Assignment-Video
@@ -20,7 +20,7 @@ Streamlit frontend for user interaction
 
 Environment-based configuration for API keys and local URLs
 
-Uses cheaper OpenAI models for cost efficiency
+Uses Gemini models for cost efficiency
 
 🧩 Tech Stack
 
@@ -32,7 +32,7 @@ Streamlit – for web UI
 
 ChromaDB – as the vector database
 
-OpenAI API – for embeddings and responses
+Google Gemini API – for embeddings and responses
 
 dotenv – for managing environment variables
 
@@ -52,7 +52,9 @@ pip install -r requirements.txt
 
 Create a .env file in the root directory and add the following:
 
-OPENAI_API_KEY=your_openai_api_key
+GOOGLE_API_KEY=your_google_api_key
+GEMINI_EMBEDDING_MODEL=models/gemini-embedding-001
+GEMINI_CHAT_MODEL=gemini-1.5-flash
 VECTOR_DB_PATH=./data/vectordb
 BASE_URL=http://localhost:8000
 
@@ -101,7 +103,7 @@ The data is embedded and stored in a Chroma vector database.
 
 When a user asks a question, the app retrieves the most relevant FAQ context.
 
-The OpenAI API generates an answer only based on that context.
+The Gemini API generates an answer only based on that context.
 
 If the answer isn't found, it politely says:
 

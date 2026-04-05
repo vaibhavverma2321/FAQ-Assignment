@@ -1,11 +1,23 @@
-from openai import OpenAI
 from dotenv import load_dotenv
 import os
+from langchain_google_genai import ChatGoogleGenerativeAI
 from rag.vector_store import get_relevant_context
 
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+_GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+_CHAT_MODEL = os.getenv("GEMINI_CHAT_MODEL", "gemini-2.5-flash")
+
+def _is_model_not_found_error(error: Exception) -> bool:
+    message = str(error).lower()
+    return "not found" in message and "generatecontent" in message
+
+
+def _make_client(model_name: str):
+    return ChatGoogleGenerativeAI(
+        model=model_name,
+        google_api_key=_GOOGLE_API_KEY,
+    )
 
 def generate_answer(question: str):
     context_docs = get_relevant_context(question)
@@ -29,14 +41,24 @@ Context:
 Question: {question}
 """
 
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a friendly, concise clinic assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.3
-    )
+    model_candidates = []
+    for model_name in (_CHAT_MODEL, "gemini-2.5-flash"):
+        if model_name not in model_candidates:
+            model_candidates.append(model_name)
 
-    answer = response.choices[0].message.content.strip()
-    return answer
+    last_error = None
+    for model_name in model_candidates:
+        try:
+            response = _make_client(model_name).invoke(
+                [
+                    ("system", "You are a friendly, concise clinic assistant."),
+                    ("human", prompt),
+                ]
+            )
+            return response.content.strip()
+        except Exception as error:
+            last_error = error
+            if not _is_model_not_found_error(error):
+                raise
+
+    raise RuntimeError("No supported Gemini chat model is available.") from last_error

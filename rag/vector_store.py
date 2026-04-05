@@ -1,36 +1,38 @@
-import chromadb
-from chromadb.config import Settings
-from rag.embeddings import get_embedding
-import json, os
+import json
+import os
+from pathlib import Path
 
-class OpenAIEmbeddingFunction:
-    def embed_documents(self, input):
-        return [get_embedding(text) for text in input]
+from dotenv import load_dotenv
+from langchain_chroma import Chroma
+from rag.embeddings import embeddings
 
-    def embed_query(self, input):
-        return [get_embedding(input)]
+load_dotenv()
 
-    def __call__(self, input):
-        return self.embed_documents(input)
+COLLECTION_NAME = "clinic_faq"
+VECTOR_DB_PATH = os.getenv("VECTOR_DB_PATH", "./data/vectordb")
+DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "clinic_info.json"
 
-    def name(self):
-        return "openai-embedding-function"
 
-def build_vector_store():
-    client = chromadb.Client(Settings(
-        persist_directory=os.getenv("VECTOR_DB_PATH"),
-        anonymized_telemetry=False
-    ))
-
-    embedding_function = OpenAIEmbeddingFunction()
-
-    collection = client.get_or_create_collection(
-        name="clinic_faq",
-        embedding_function=embedding_function
+def _get_vector_store():
+    return Chroma(
+        collection_name=COLLECTION_NAME,
+        persist_directory=VECTOR_DB_PATH,
+        embedding_function=embeddings,
     )
 
-    with open("data/clinic_info.json") as f:
+def build_vector_store():
+    vector_store = _get_vector_store()
+    existing_items = vector_store.get(include=[])
+    if existing_items.get("ids"):
+        print("Vector store already exists; skipping rebuild.")
+        return
+
+    with open(DATA_PATH, encoding="utf-8") as f:
         data = json.load(f)
+
+    texts = []
+    metadatas = []
+    ids = []
 
     i = 0
     for section, faqs in data.items():
@@ -38,27 +40,20 @@ def build_vector_store():
             question = faq.get("q")
             answer = faq.get("a")
 
-            collection.add(
-                documents=[answer],
-                metadatas=[{"question": question, "category": section}],
-                ids=[str(i)]
-            )
+            texts.append(answer)
+            metadatas.append({"question": question, "category": section})
+            ids.append(str(i))
             i += 1
+
+    vector_store.add_texts(texts=texts, metadatas=metadatas, ids=ids)
 
     print(f"Vector store built successfully with {i} FAQs!")
 
 def get_relevant_context(query, top_k=3):
-    client = chromadb.Client(Settings(
-        persist_directory=os.getenv("VECTOR_DB_PATH"),
-        anonymized_telemetry=False
-    ))
-
-    embedding_function = OpenAIEmbeddingFunction()
-
-    collection = client.get_or_create_collection(
-        name="clinic_faq",
-        embedding_function=embedding_function
+    vector_store = _get_vector_store()
+    results = vector_store.similarity_search(
+        query=query,
+        k=top_k
     )
 
-    results = collection.query(query_texts=[query], n_results=top_k)
-    return [doc for doc in results["documents"][0]]
+    return [doc.page_content for doc in results]
